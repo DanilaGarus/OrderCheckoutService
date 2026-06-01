@@ -1,0 +1,5 @@
+bin/
+obj/
+src/MailServiceWinApi/wwwroot/
+.vs/
+*.user

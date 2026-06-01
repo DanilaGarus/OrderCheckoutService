@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>MailServiceWinApi</RootNamespace>
+    <AssemblyName>MailService</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.105.0" />
+    <PackageReference Include="ExcelDataReader" Version="3.7.0" />
+    <PackageReference Include="MailKit" Version="4.16.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\..\Git\BackendAPI\MailMethods\SendMessage.cs" LinkBase="Backend\MailMethods" />
+    <Compile Include="..\..\..\Git\BackendAPI\MailMethods\SmtpConnectionHelper.cs" LinkBase="Backend\MailMethods" />
+    <Compile Include="..\..\..\Git\BackendAPI\MailMethods\CheckClientConnectivity.cs" LinkBase="Backend\MailMethods" />
+    <Compile Include="..\..\..\Git\BackendAPI\ExcelFunctions\CsvConvertor.cs" LinkBase="Backend\ExcelFunctions" />
+    <Compile Include="..\..\..\Git\BackendAPI\ExcelFunctions\CsvConvertOptions.cs" LinkBase="Backend\ExcelFunctions" />
+    <Compile Include="..\..\..\Git\BackendAPI\ExcelFunctions\CsvConvertResult.cs" LinkBase="Backend\ExcelFunctions" />
+  </ItemGroup>
+
+</Project>
