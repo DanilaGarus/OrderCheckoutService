@@ -22,12 +22,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\..\Git\BackendAPI\MailMethods\SendMessage.cs" LinkBase="Backend\MailMethods" />
-    <Compile Include="..\..\..\Git\BackendAPI\MailMethods\SmtpConnectionHelper.cs" LinkBase="Backend\MailMethods" />
-    <Compile Include="..\..\..\Git\BackendAPI\MailMethods\CheckClientConnectivity.cs" LinkBase="Backend\MailMethods" />
-    <Compile Include="..\..\..\Git\BackendAPI\ExcelFunctions\CsvConvertor.cs" LinkBase="Backend\ExcelFunctions" />
-    <Compile Include="..\..\..\Git\BackendAPI\ExcelFunctions\CsvConvertOptions.cs" LinkBase="Backend\ExcelFunctions" />
-    <Compile Include="..\..\..\Git\BackendAPI\ExcelFunctions\CsvConvertResult.cs" LinkBase="Backend\ExcelFunctions" />
+    <Compile Include="..\..\..\BackendAPI\MailMethods\SendMessage.cs" LinkBase="Backend\MailMethods" />
+    <Compile Include="..\..\..\BackendAPI\MailMethods\SmtpConnectionHelper.cs" LinkBase="Backend\MailMethods" />
+    <Compile Include="..\..\..\BackendAPI\MailMethods\CheckClientConnectivity.cs" LinkBase="Backend\MailMethods" />
+    <Compile Include="..\..\..\BackendAPI\ExcelFunctions\CsvConvertor.cs" LinkBase="Backend\ExcelFunctions" />
+    <Compile Include="..\..\..\BackendAPI\ExcelFunctions\CsvConvertOptions.cs" LinkBase="Backend\ExcelFunctions" />
+    <Compile Include="..\..\..\BackendAPI\ExcelFunctions\CsvConvertResult.cs" LinkBase="Backend\ExcelFunctions" />
   </ItemGroup>
 
 </Project>

@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using BackendAPI.ExcelFunctions;
 using BackendAPI.MailMethods;
@@ -138,7 +139,7 @@ public sealed class MailBridgeHandler
     private static UserDto? DeserializeAuth(string? body) =>
         string.IsNullOrWhiteSpace(body) ? null : JsonSerializer.Deserialize<UserDto>(body, JsonOptions);
 
-    private static bool ValidateAuth(UserDto? auth, out string error)
+    private static bool ValidateAuth([NotNullWhen(true)] UserDto? auth, out string error)
     {
         if (auth is null
             || string.IsNullOrWhiteSpace(auth.host)
