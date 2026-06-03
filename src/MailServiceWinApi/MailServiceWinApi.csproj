@@ -12,22 +12,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="ClosedXML" Version="0.105.0" />
-    <PackageReference Include="ExcelDataReader" Version="3.7.0" />
+    <PackageReference Include="ExcelDataReader" Version="3.8.0" />
+    <PackageReference Include="ExcelDataReader.DataSet" Version="3.8.0" />
     <PackageReference Include="MailKit" Version="4.16.0" />
   </ItemGroup>
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="..\..\..\BackendAPI\MailMethods\SendMessage.cs" LinkBase="Backend\MailMethods" />
-    <Compile Include="..\..\..\BackendAPI\MailMethods\SmtpConnectionHelper.cs" LinkBase="Backend\MailMethods" />
-    <Compile Include="..\..\..\BackendAPI\MailMethods\CheckClientConnectivity.cs" LinkBase="Backend\MailMethods" />
-    <Compile Include="..\..\..\BackendAPI\ExcelFunctions\CsvConvertor.cs" LinkBase="Backend\ExcelFunctions" />
-    <Compile Include="..\..\..\BackendAPI\ExcelFunctions\CsvConvertOptions.cs" LinkBase="Backend\ExcelFunctions" />
-    <Compile Include="..\..\..\BackendAPI\ExcelFunctions\CsvConvertResult.cs" LinkBase="Backend\ExcelFunctions" />
-  </ItemGroup>
-
 </Project>

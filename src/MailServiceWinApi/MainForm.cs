@@ -111,7 +111,7 @@ public sealed class MainForm : Form
         }
 
         _mainPanel.SetBusy(true);
-        var tempAttachmentPaths = new List<string>();
+        string? tempWorkDir = null;
 
         try
         {
@@ -120,14 +120,15 @@ public sealed class MainForm : Form
                 excelBytes,
                 Path.GetFileName(_selectedFilePath));
 
-            var sourceName = Path.GetFileName(_selectedFilePath);
+            tempWorkDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempWorkDir);
+
             var sentCount = 0;
 
             foreach (var row in convertedRows)
             {
-                var tempPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}_{row.FileName}");
+                var tempPath = Path.Combine(tempWorkDir, row.FileName);
                 await File.WriteAllBytesAsync(tempPath, row.Content);
-                tempAttachmentPaths.Add(tempPath);
 
                 await _mailService.SendMailAsync(
                     _settings,
@@ -158,16 +159,11 @@ public sealed class MainForm : Form
             _mainPanel.SetBusy(false);
             _mainPanel.SetSelectedFile(_selectedFilePath);
 
-            foreach (var tempPath in tempAttachmentPaths)
+            if (!string.IsNullOrEmpty(tempWorkDir) && Directory.Exists(tempWorkDir))
             {
-                if (!File.Exists(tempPath))
-                {
-                    continue;
-                }
-
                 try
                 {
-                    File.Delete(tempPath);
+                    Directory.Delete(tempWorkDir, recursive: true);
                 }
                 catch
                 {

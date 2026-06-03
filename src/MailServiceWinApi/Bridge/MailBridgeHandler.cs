@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
-using BackendAPI.ExcelFunctions;
-using BackendAPI.MailMethods;
+using MailServiceWinApi.ExcelFunctions;
+using MailServiceWinApi.MailMethods;
 using MailServiceWinApi.Models;
 using Microsoft.AspNetCore.Http;
 
@@ -112,23 +112,54 @@ public sealed class MailBridgeHandler
         try
         {
             var bytes = Convert.FromBase64String(payload.fileBase64);
-            var results = await CsvConvertor.ConvertRowsAsync(bytes, payload.fileName);
-            if (results.Count == 0)
+            var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            var extension = Path.GetExtension(payload.fileName);
+            if (string.IsNullOrWhiteSpace(extension))
             {
-                return BridgeResponse.For(request.id, 400, """{"message":"Excel file has no data rows."}""");
+                extension = ".xlsx";
             }
 
-            var responseBody = JsonSerializer.Serialize(new
+            var tempExcelPath = Path.Combine(tempDir, "source" + extension);
+            await File.WriteAllBytesAsync(tempExcelPath, bytes);
+
+            try
             {
-                files = results.Select(r => new
+                var csvPaths = CsvConvertor.ExcelToCsv(tempExcelPath, tempDir);
+                if (csvPaths.Count == 0)
                 {
-                    fileName = r.FileName,
-                    rowNumber = r.RowNumber,
-                    contentType = r.ContentType,
-                    contentBase64 = Convert.ToBase64String(r.Content),
-                }),
-            });
-            return BridgeResponse.For(request.id, 200, responseBody);
+                    return BridgeResponse.For(request.id, 400, """{"message":"Excel file has no data rows."}""");
+                }
+
+                var rowNumber = 1;
+                var files = new List<object>();
+                foreach (var csvPath in csvPaths)
+                {
+                    var content = await File.ReadAllBytesAsync(csvPath);
+                    files.Add(new
+                    {
+                        fileName = Path.GetFileName(csvPath),
+                        rowNumber = rowNumber++,
+                        contentType = "text/csv",
+                        contentBase64 = Convert.ToBase64String(content),
+                    });
+                }
+
+                var responseBody = JsonSerializer.Serialize(new { files });
+                return BridgeResponse.For(request.id, 200, responseBody);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, recursive: true);
+                }
+                catch
+                {
+                    // ignore cleanup errors
+                }
+            }
         }
         catch (ArgumentException ex)
         {

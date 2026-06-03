@@ -20,6 +20,7 @@ public sealed class ClientSettingsStore
             "MailService");
         Directory.CreateDirectory(dir);
         _filePath = Path.Combine(dir, "client.json");
+        
     }
 
     public ClientSettings Load()
