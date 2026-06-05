@@ -6,14 +6,29 @@ namespace MailServiceWinApi.ExcelFunctions;
 
 public class CsvConvertor
 {
-    public static List<string> ExcelToCsv(string filePath, string? outputDirectory = null)
+    
+    public static List<string> ExcelToCsv(
+        string filePath,
+        string? outputDirectory = null,
+        int startRowNumber = 1,
+        int startColumnNumber = 1,
+        string? brandFilter = null)
     {
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
         using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read);
         using var reader = ExcelReaderFactory.CreateReader(stream);
 
-        DataSet result = reader.AsDataSet();
+        var configuration = new ExcelDataSetConfiguration()
+        {
+            ConfigureDataTable = (tableReader) => new ExcelDataTableConfiguration()
+            {
+                FilterRow = (rowReader) => rowReader.Depth >= startRowNumber - 1,
+                FilterColumn = (columnReader, columnIndex) => columnIndex >= startColumnNumber - 1
+            }
+        };
+        
+        DataSet result = reader.AsDataSet(configuration);
 
         DataTable firstTable = result.Tables[0];
 
@@ -59,7 +74,7 @@ public class CsvConvertor
             for (int j = 0; j < transposedMatrix[0].Length && j < row.Length; j++)
             {
                 string val = row[j];
-                if (!string.IsNullOrEmpty(val))
+                if (!string.IsNullOrEmpty(val) && MatchesBrand(val, brandFilter))
                 {
                     stuctedValues[transposedMatrix[0][j]].Add(val);
                 }
@@ -72,17 +87,32 @@ public class CsvConvertor
         Directory.CreateDirectory(outputDir);
 
         var createdFiles = new List<string>();
-
+        
+        DateTime dateTime = DateTime.Now;
+        DateTimeOffset dateTimeOffset = DateTimeOffset.UtcNow;
+        long secondsTimestamp = dateTimeOffset.ToUnixTimeSeconds();
+        
         foreach (var keyValuePair in stuctedValues)
         {
+            if (keyValuePair.Value.Count == 0)
+            {
+                continue;
+            }
+
             string fileName = $"order_{keyValuePair.Key}.csv";
-            var fileText = $"{keyValuePair.Key}";
+            var fileText = $"{keyValuePair.Key + ";" + dateTime.ToString("d") + ";" + secondsTimestamp + ";1;;;;;0;;;;;;"}";
             var fullPath = Path.Combine(outputDir, fileName);
             File.WriteAllText(fullPath, fileText);
 
             foreach (var value in keyValuePair.Value)
             {
-                fileText = $", {value}";
+                string trimmedBrand = value.Trim();
+                
+                string rowBrand = string.IsNullOrWhiteSpace(brandFilter)
+                    ? ExtractBrand(trimmedBrand)
+                    : brandFilter.Trim();
+
+                fileText = $"\n{trimmedBrand};{rowBrand};1;0;{trimmedBrand}_{rowBrand};B";
                 File.AppendAllText(fullPath, fileText);
             }
 
@@ -90,6 +120,41 @@ public class CsvConvertor
         }
 
         return createdFiles;
+    }
+
+    private static string ExtractBrand(string value)
+    {
+        var trimmedValue = value.Trim();
+        if (trimmedValue.Length == 0)
+        {
+            return string.Empty;
+        }
+
+        var lastSpaceIndex = trimmedValue.LastIndexOf(' ');
+        return lastSpaceIndex >= 0
+            ? trimmedValue[(lastSpaceIndex + 1)..]
+            : trimmedValue;
+    }
+    
+    private static bool MatchesBrand(string value, string? brandFilter)
+    {
+        if (string.IsNullOrWhiteSpace(brandFilter))
+        {
+            return true;
+        }
+
+        var trimmedValue = value.Trim();
+        if (trimmedValue.Length == 0)
+        {
+            return false;
+        }
+
+        var lastSpaceIndex = trimmedValue.LastIndexOf(' ');
+        var productBrand = lastSpaceIndex >= 0
+            ? trimmedValue[(lastSpaceIndex + 1)..]
+            : trimmedValue;
+
+        return string.Equals(productBrand, brandFilter.Trim(), StringComparison.OrdinalIgnoreCase);
     }
 
     public static async Task SendConvertedFilesAndDeleteAsync(

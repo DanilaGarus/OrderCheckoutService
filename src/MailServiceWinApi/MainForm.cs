@@ -25,6 +25,7 @@ public sealed class MainForm : Form
         ClientSize = new Size(520, 500);
 
         _settings = _settingsStore.Load();
+        _mainPanel.SetMailSubject(_settings.MailSubject);
 
         _mainPanel.SelectFileClicked += (_, _) => SelectFile();
         _mainPanel.SettingsClicked += (_, _) => ShowSettings();
@@ -64,13 +65,21 @@ public sealed class MainForm : Form
         _contentHost.Controls.Clear();
         _contentHost.Controls.Add(_mainPanel);
         _mainPanel.SetSelectedFile(_selectedFilePath);
+        _mainPanel.SetMailSubject(_settings.MailSubject);
     }
 
     private void ShowSettings()
     {
+        SyncMailSubjectFromMain();
         _settingsPanel.LoadSettings(_settings);
         _contentHost.Controls.Clear();
         _contentHost.Controls.Add(_settingsPanel);
+    }
+
+    private void SyncMailSubjectFromMain()
+    {
+        _settings.MailSubject = _mainPanel.ReadMailSubject();
+        _settingsStore.Save(_settings);
     }
 
     private async Task ProcessFileAsync()
@@ -110,6 +119,8 @@ public sealed class MainForm : Form
             return;
         }
 
+        SyncMailSubjectFromMain();
+
         _mainPanel.SetBusy(true);
         string? tempWorkDir = null;
 
@@ -118,7 +129,10 @@ public sealed class MainForm : Form
             var excelBytes = await File.ReadAllBytesAsync(_selectedFilePath);
             var convertedRows = await _mailService.ConvertExcelRowsAsync(
                 excelBytes,
-                Path.GetFileName(_selectedFilePath));
+                Path.GetFileName(_selectedFilePath),
+                _settings.StartRowNumber,
+                _settings.StartColumnNumber,
+                string.IsNullOrWhiteSpace(_settings.Brand) ? null : _settings.Brand.Trim());
 
             tempWorkDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(tempWorkDir);
@@ -130,10 +144,17 @@ public sealed class MainForm : Form
                 var tempPath = Path.Combine(tempWorkDir, row.FileName);
                 await File.WriteAllBytesAsync(tempPath, row.Content);
 
+                var fileNameWithoutExt = Path.GetFileNameWithoutExtension(row.FileName);
+                var clientCode = fileNameWithoutExt.StartsWith("order_", StringComparison.OrdinalIgnoreCase)
+                    ? fileNameWithoutExt["order_".Length..]
+                    : fileNameWithoutExt;
+
+                var dynamicSubject = $"ClientID:{clientCode} {_settings.MailSubject}";
+
                 await _mailService.SendMailAsync(
                     _settings,
                     _settings.RecipientEmail,
-                    $"",
+                    dynamicSubject,
                     $"",
                     attachmentPaths: [tempPath]);
 
@@ -176,6 +197,7 @@ public sealed class MainForm : Form
     private async Task SaveSettingsAsync(ClientSettings settings)
     {
         _settings = settings;
+        _settings.MailSubject = _mainPanel.ReadMailSubject();
         _settingsStore.Save(_settings);
 
         try
@@ -197,5 +219,24 @@ public sealed class MainForm : Form
         }
 
         ShowMain();
+    }
+
+    private void MainForm_Load(object sender, EventArgs e)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    /// <summary>
+    /// Required method for Designer support - do not modify
+    /// the contents of this method with the code editor.
+    /// </summary>
+    private void InitializeComponent()
+    {
+        SuspendLayout();
+        // 
+        // MainForm
+        // 
+        ClientSize = new System.Drawing.Size(284, 261);
+        ResumeLayout(false);
     }
 }

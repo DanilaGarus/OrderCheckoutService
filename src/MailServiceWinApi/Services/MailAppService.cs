@@ -22,12 +22,18 @@ public sealed class MailAppService
     public async Task<IReadOnlyList<ConvertedFile>> ConvertExcelRowsAsync(
         byte[] excelBytes,
         string? fileName = null,
+        int startRowNumber = 1,
+        int startColumnNumber = 1,
+        string? brand = null,
         CancellationToken cancellationToken = default)
     {
         var payload = new
         {
             fileName,
             fileBase64 = Convert.ToBase64String(excelBytes),
+            startRowNumber,
+            startColumnNumber,
+            brand,
         };
         var body = JsonSerializer.Serialize(payload, JsonOptions);
         var response = await _bridge.HandleAsync(new BridgeRequest

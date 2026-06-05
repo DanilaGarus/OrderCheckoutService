@@ -80,7 +80,7 @@ public sealed class MailBridgeHandler
                 ContentBase64 = a.contentBase64,
             })
             .ToList();
-
+        
         return await SendMessage.SendMail(
             auth.host,
             auth.port,
@@ -126,7 +126,14 @@ public sealed class MailBridgeHandler
 
             try
             {
-                var csvPaths = CsvConvertor.ExcelToCsv(tempExcelPath, tempDir);
+                var startRow = payload.startRowNumber > 0 ? payload.startRowNumber : 1;
+                var startColumn = payload.startColumnNumber > 0 ? payload.startColumnNumber : 1;
+                var csvPaths = CsvConvertor.ExcelToCsv(
+                    tempExcelPath,
+                    tempDir,
+                    startRow,
+                    startColumn,
+                    string.IsNullOrWhiteSpace(payload.brand) ? null : payload.brand);
                 if (csvPaths.Count == 0)
                 {
                     return BridgeResponse.For(request.id, 400, """{"message":"Excel file has no data rows."}""");
@@ -205,5 +212,8 @@ public sealed class MailBridgeHandler
     {
         public string? fileName { get; set; }
         public string? fileBase64 { get; set; }
+        public int startRowNumber { get; set; }
+        public int startColumnNumber { get; set; }
+        public string? brand { get; set; }
     }
 }
